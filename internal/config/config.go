@@ -1,50 +1,49 @@
 package config
 
 import (
-	"os"
-	"strconv"
+	"fmt"
+
+	"github.com/spf13/viper"
 )
 
 type Config struct {
 	ServerHost string
-	ServerPort string
+	ServerPort uint
 	DBHost     string
 	DBUser     string
 	DBPassword string
 	DBName     string
-	DBPort     string
+	DBPort     uint
 	JWTSecret  string
 }
 
 func LoadConfig() (Config, error) {
-	config := Config{
-		ServerHost: getEnv("SERVER_HOST", "localhost"),
-		ServerPort: getEnv("SERVER_PORT", "8080"),
-		DBHost:     getEnv("DB_HOST", "localhost"),
-		DBUser:     getEnv("DB_USER", "myuser"),
-		DBPassword: getEnv("DB_PASSWORD", "pass"),
-		DBName:     getEnv("DB_NAME", "mydb"),
-		DBPort:     getEnv("DB_PORT", "5432"),
-		JWTSecret:  getEnv("JWT_SECRET", "your-secret-key"),
+	v := viper.New()
+
+	v.SetConfigName("config")
+	v.SetConfigType("yaml")
+
+	v.AddConfigPath(".")
+	v.AddConfigPath("./config")
+
+	if err := v.ReadInConfig(); err != nil {
+		return Config{}, err
 	}
 
-	if _, err := strconv.Atoi(config.ServerPort); err != nil {
-		return Config{}, err
-	}
-	if _, err := strconv.Atoi(config.DBPort); err != nil {
-		return Config{}, err
+	config := Config{
+		ServerHost: v.GetString("server.host"),
+		ServerPort: v.GetUint("server.port"),
+		DBHost:     v.GetString("database.host"),
+		DBUser:     v.GetString("database.user"),
+		DBPassword: v.GetString("database.password"),
+		DBName:     v.GetString("database.name"),
+		DBPort:     v.GetUint("database.port"),
+		JWTSecret:  v.GetString("jwt.secret"),
 	}
 
 	return config, nil
 }
 
-func getEnv(key, defaultValue string) string {
-	if value, exists := os.LookupEnv(key); exists {
-		return value
-	}
-	return defaultValue
-}
-
 func GetServerAddress(config Config) string {
-	return config.ServerHost + ":" + config.ServerPort
+	return fmt.Sprintf("%s:%d", config.ServerHost, config.ServerPort)
 }

@@ -1,0 +1,16 @@
+# Server Configuration
+server:
+  host: localhost
+  port: 8080
+
+# Database Configuration
+database:
+  host: localhost
+  user: myuser
+  password: pass
+  name: mydb
+  port: 5432
+
+# JWT Configuration
+jwt:
+  secret: your-very-secure-secret-key

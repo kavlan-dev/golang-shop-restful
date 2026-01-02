@@ -34,17 +34,36 @@ go mod download
 
 ## Конфигурация
 
-Проект использует переменные окружения для конфигурации. Вы можете  экспортировать переменные:
+1. **Шаблон конфигурации**: В проекте доступен шаблон конфигурационного файла `config/config.example.yaml`. Скопируйте его в `config/config.yaml` и настройте параметры:
 
 ```bash
-# Пример переменных окружения
-export DB_HOST=localhost
-export DB_USER=myuser
-export DB_PASSWORD=pass
-export DB_NAME=mydb
-export DB_PORT=5432
-export JWT_SECRET=your-very-secure-secret-key
+cp config/config.example.yaml config/config.yaml
 ```
+
+2. **Структура конфигурационного файла**:
+
+```yaml
+# Server Configuration
+server:
+  host: localhost
+  port: 8080
+
+# Database Configuration
+database:
+  host: localhost
+  user: myuser
+  password: pass
+  name: mydb
+  port: 5432
+
+# JWT Configuration
+jwt:
+  secret: your-very-secure-secret-key
+```
+
+3. **Важно**: Файл `config/config.yaml` добавлен в `.gitignore`, чтобы избежать коммита чувствительных данных (паролей, секретных ключей) в репозиторий.
+
+Приложение будет автоматически загружать конфигурацию из файла `config/config.yaml` при запуске.
 
 ## Запуск
 
@@ -121,8 +140,9 @@ curl -X GET "http://localhost:8080/api/products?limit=10&offset=0" \
 ```
 .
 ├── main.go                  # Точка входа
+├── internal/                # Конфигурации проекта
 ├── internal/
-│   ├── config/              # Конфигурация
+│   ├── config/              # Применение конфигураций
 │   ├── database/            # Подключение к базе данных
 │   ├── handlers/            # Обработчики HTTP запросов
 │   ├── middleware/          # Middleware (аутентификация)
@@ -139,6 +159,7 @@ curl -X GET "http://localhost:8080/api/products?limit=10&offset=0" \
 - **ORM**: [GORM](https://gorm.io/)
 - **Логирование**: [Zap](https://github.com/uber-go/zap)
 - **JWT**: [golang-jwt/jwt](https://github.com/golang-jwt/jwt)
+- **Конфигурация**: [Viper](https://github.com/spf13/viper)
 - **База данных**: PostgreSQL
 
 ## Лицензия
