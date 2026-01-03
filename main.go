@@ -38,7 +38,7 @@ func main() {
 	handler := handlers.NewHandler(service)
 
 	r := gin.Default()
-	r.Use(middleware.CORSMiddleware(cfg))
+	r.Use(middleware.CORSMiddleware(cfg.AllowOrigins))
 
 	auth := r.Group("/api/auth")
 	auth.POST("/register", handler.Register)
