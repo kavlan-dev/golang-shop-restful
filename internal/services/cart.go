@@ -10,6 +10,7 @@ type CartService interface {
 	CreateCart(user *models.User) error
 	GetCart(user_id int) (models.Cart, error)
 	AddToCart(user_id, productID int) error
+	ClearCart(user_id int) error
 }
 
 func (s *Services) CreateCart(user *models.User) error {
@@ -72,6 +73,24 @@ func (s *Services) AddToCart(user_id, productID int) error {
 	}
 	product.Stock -= 1
 	if err := s.db.Save(&product).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *Services) ClearCart(user_id int) error {
+	var cart models.Cart
+	if err := s.db.Where("user_id = ?", user_id).First(&cart).Error; err != nil {
+		return err
+	}
+
+	var cartItems []models.CartItem
+	if err := s.db.Where("cart_id = ?", cart.ID).Find(&cartItems).Error; err != nil {
+		return err
+	}
+
+	if err := s.db.Delete(&cartItems).Error; err != nil {
 		return err
 	}
 

@@ -6,9 +6,10 @@ import (
 
 type ProductService interface {
 	GetProducts(limit, offset int) ([]models.Product, error)
-	CreateProduct(product *models.Product) error
+	CreateProduct(product *models.ProductCreateRequest) error
 	GetProductById(id int) (models.Product, error)
-	UpdateProduct(id int, updateProduct *models.Product) error
+	UpdateProduct(id int, updateProduct *models.ProductUpdateRequest) error
+	DeleteProduct(id int) error
 }
 
 func (s *Services) GetProducts(limit, offset int) ([]models.Product, error) {
@@ -20,7 +21,7 @@ func (s *Services) GetProducts(limit, offset int) ([]models.Product, error) {
 	return products, nil
 }
 
-func (s *Services) CreateProduct(product *models.Product) error {
+func (s *Services) CreateProduct(product *models.ProductCreateRequest) error {
 	if err := s.db.Create(product).Error; err != nil {
 		return err
 	}
@@ -38,21 +39,26 @@ func (s *Services) GetProductById(id int) (models.Product, error) {
 	return product, nil
 }
 
-func (s *Services) UpdateProduct(id int, updateProduct *models.Product) error {
-	var existingProduct models.Product
-	if err := s.db.First(&existingProduct, id).Error; err != nil {
+func (s *Services) UpdateProduct(id int, updateProduct *models.ProductUpdateRequest) error {
+	existingProduct, err := s.GetProductById(id)
+	if err != nil {
 		return err
 	}
 
-	existingProduct = models.Product{
-		Title:       updateProduct.Title,
-		Description: updateProduct.Description,
-		Price:       updateProduct.Price,
-		Category:    existingProduct.Category,
-		Stock:       existingProduct.Stock,
+	if err := s.db.Model(&existingProduct).Updates(updateProduct).Error; err != nil {
+		return err
 	}
 
-	if err := s.db.Save(&existingProduct).Error; err != nil {
+	return nil
+}
+
+func (s *Services) DeleteProduct(id int) error {
+	product, err := s.GetProductById(id)
+	if err != nil {
+		return err
+	}
+
+	if err := s.db.Delete(&product).Error; err != nil {
 		return err
 	}
 

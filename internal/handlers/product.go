@@ -14,6 +14,7 @@ type ProductHandler interface {
 	PostProduct(c *gin.Context)
 	GetProductById(c *gin.Context)
 	PutProduct(c *gin.Context)
+	DeleteProduct(c *gin.Context)
 }
 
 func (h *Handler) GetProducts(c *gin.Context) {
@@ -57,7 +58,7 @@ func (h *Handler) GetProducts(c *gin.Context) {
 }
 
 func (h *Handler) PostProduct(c *gin.Context) {
-	var newProduct models.Product
+	var newProduct models.ProductCreateRequest
 	if err := c.BindJSON(&newProduct); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "Invalid product data",
@@ -114,7 +115,7 @@ func (h *Handler) PutProduct(c *gin.Context) {
 		return
 	}
 
-	var updateProduct models.Product
+	var updateProduct models.ProductUpdateRequest
 	if err := c.BindJSON(&updateProduct); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "Invalid product data",
@@ -136,4 +137,30 @@ func (h *Handler) PutProduct(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, updateProduct)
+}
+
+func (h *Handler) DeleteProduct(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid product ID",
+		})
+		return
+	}
+
+	if err := h.service.DeleteProduct(id); err != nil {
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{
+				"error": "Product not found",
+			})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "Failed to update product",
+			})
+		}
+		return
+	}
+
+	c.JSON(http.StatusNoContent, gin.H{})
 }

@@ -11,6 +11,7 @@ import (
 type CartHandler interface {
 	GetCart(c *gin.Context)
 	AddToCart(c *gin.Context)
+	ClearCart(c *gin.Context)
 }
 
 func (h *Handler) GetCart(c *gin.Context) {
@@ -66,4 +67,22 @@ func (h *Handler) AddToCart(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Product added to cart successfully",
 	})
+}
+
+func (h *Handler) ClearCart(c *gin.Context) {
+	userId, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Unauthorized",
+		})
+		return
+	}
+
+	if err := h.service.ClearCart(int(userId.(float64))); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to clear cart",
+		})
+	}
+
+	c.JSON(http.StatusNoContent, gin.H{})
 }

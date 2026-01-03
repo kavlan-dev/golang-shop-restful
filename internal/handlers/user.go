@@ -43,7 +43,7 @@ func (h *Handler) Register(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, gin.H{
-		"message": "user successful created",
+		"message": "user successfully created",
 	})
 }
 

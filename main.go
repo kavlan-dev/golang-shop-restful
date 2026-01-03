@@ -44,17 +44,19 @@ func main() {
 	auth.POST("/register", handler.Register)
 	auth.POST("/login", handler.Login)
 
-	api := r.Group("/api/products")
-	api.Use(middleware.AuthMiddleware())
-	api.GET("/", handler.GetProducts)
-	api.POST("/", handler.PostProduct)
-	api.GET("/:id", handler.GetProductById)
-	api.PUT("/:id", handler.PutProduct)
+	product := r.Group("/api/products")
+	product.Use(middleware.AuthMiddleware())
+	product.GET("/", handler.GetProducts)
+	product.POST("/", handler.PostProduct)
+	product.GET("/:id", handler.GetProductById)
+	product.PUT("/:id", handler.PutProduct)
+	product.DELETE("/:id", handler.DeleteProduct)
 
 	cart := r.Group("/api/cart")
 	cart.Use(middleware.AuthMiddleware())
 	cart.GET("/", handler.GetCart)
-	cart.POST("/add/:id", handler.AddToCart)
+	cart.POST("/:id", handler.AddToCart)
+	cart.DELETE("/", handler.ClearCart)
 
 	utils.Logger.Fatal(r.Run(config.GetServerAddress(cfg)))
 }
