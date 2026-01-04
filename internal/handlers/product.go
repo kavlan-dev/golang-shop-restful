@@ -151,7 +151,9 @@ func (h *Handler) PutProduct(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, updateProduct)
+	c.JSON(http.StatusOK, gin.H{
+		"message": "product successfully updated",
+	})
 }
 
 func (h *Handler) DeleteProduct(c *gin.Context) {
