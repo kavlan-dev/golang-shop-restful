@@ -2,7 +2,6 @@ package services
 
 import (
 	"golang-shop-restful/internal/models"
-	"golang-shop-restful/internal/utils"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -44,6 +43,5 @@ func (s *Services) AuthenticateUser(username, password string) (models.User, err
 		return models.User{}, err
 	}
 
-	utils.Logger.Debug(user)
 	return user, nil
 }
