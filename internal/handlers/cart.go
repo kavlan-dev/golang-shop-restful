@@ -34,8 +34,7 @@ func (h *Handler) GetCart(c *gin.Context) {
 }
 
 func (h *Handler) AddToCart(c *gin.Context) {
-	productIdStr := c.Param("id")
-	productId, err := strconv.Atoi(productIdStr)
+	productId, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "Invalid product ID",
