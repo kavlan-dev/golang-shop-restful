@@ -40,3 +40,62 @@ func (s *Services) AuthenticateUser(username, password string) (models.User, err
 
 	return user, nil
 }
+
+func (s *Services) CreateAdminIfNotExists(adminUsername, adminEmail, adminPassword string) error {
+	admin, _ := s.getUserByUsername(adminUsername)
+	if admin.ID != 0 {
+		return nil
+	}
+
+	adminUser := &models.User{
+		Username: adminUsername,
+		Password: adminPassword,
+		Email:    adminEmail,
+		Role:     "admin",
+	}
+
+	if err := s.CreateUser(adminUser); err != nil {
+		return err
+	}
+	if err := s.CreateCart(adminUser); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *Services) PromoteUserToAdmin(userID int) error {
+	var user models.User
+	if err := s.db.First(&user, userID).Error; err != nil {
+		return err
+	}
+
+	if user.Role == "admin" {
+		return nil
+	}
+
+	user.Role = "admin"
+	if err := s.db.Save(&user).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *Services) DowngradeUserToCustomer(userID int) error {
+	var user models.User
+	if err := s.db.First(&user, userID).Error; err != nil {
+		return err
+	}
+
+	if user.Role == "customer" {
+		return nil
+	}
+
+	user.Role = "customer"
+	if err := s.db.Save(&user).Error; err != nil {
+		return err
+	}
+
+	return nil
+}

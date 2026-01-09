@@ -15,27 +15,31 @@ import (
 
 func main() {
 	if err := utils.InitLogger(); err != nil {
-		log.Fatal(err.Error())
+		log.Fatal(err)
 	}
 	defer utils.Logger.Sync()
 
 	cfg, err := config.LoadConfig()
 	if err != nil {
-		utils.Logger.Fatal(err.Error())
+		utils.Logger.Fatal(err)
 	}
 
 	utils.InitJWT(cfg.JWTSecret)
 
 	db, err := database.ConnectDB(cfg)
 	if err != nil {
-		utils.Logger.Fatal(err.Error())
+		utils.Logger.Fatal(err)
 	}
 	if err := db.AutoMigrate(&models.Product{}, &models.User{}, &models.Cart{}, &models.CartItem{}); err != nil {
-		utils.Logger.Fatal(err.Error())
+		utils.Logger.Fatal(err)
 	}
 
 	service := services.NewServices(db)
 	handler := handlers.NewHandler(service)
+
+	if err := service.CreateAdminIfNotExists(cfg.AdminName, cfg.AdminEmail, cfg.AdminPassword); err != nil {
+		utils.Logger.Errorf("Failed to create initial admin: %v", err)
+	}
 
 	r := gin.Default()
 	r.Use(middleware.CORSMiddleware(cfg.AllowOrigins))
@@ -45,23 +49,28 @@ func main() {
 	auth.POST("/register", handler.Register)
 	auth.POST("/login", handler.Login)
 
-	product := r.Group("/api/products")
-	product.Use(middleware.AuthMiddleware())
+	api := r.Group("/api")
+	api.Use(middleware.AuthMiddleware())
+	admin := api.Group("/admin")
+	admin.Use(middleware.AdminMiddleware())
+
+	product := api.Group("/products")
 	product.GET("/", handler.GetProducts)
 	product.GET("/:id", handler.GetProductById)
 
-	adminProduct := r.Group("/api/products")
-	adminProduct.Use(middleware.AuthMiddleware())
-	adminProduct.Use(middleware.AdminMiddleware())
-	adminProduct.POST("/", handler.PostProduct)
-	adminProduct.PUT("/:id", handler.PutProduct)
-	adminProduct.DELETE("/:id", handler.DeleteProduct)
-
-	cart := r.Group("/api/cart")
-	cart.Use(middleware.AuthMiddleware())
+	cart := api.Group("/cart")
 	cart.GET("/", handler.GetCart)
 	cart.POST("/:id", handler.AddToCart)
 	cart.DELETE("/", handler.ClearCart)
+
+	adminUsers := admin.Group("/users")
+	adminUsers.POST("/:id/promote", handler.PromoteToAdmin)
+	adminUsers.POST("/:id/downgrade", handler.DowngradeToCustomer)
+
+	adminProduct := admin.Group("/products")
+	adminProduct.POST("/", handler.PostProduct)
+	adminProduct.PUT("/:id", handler.PutProduct)
+	adminProduct.DELETE("/:id", handler.DeleteProduct)
 
 	utils.Logger.Fatal(r.Run(config.GetServerAddress(cfg)))
 }
