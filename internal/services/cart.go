@@ -6,29 +6,34 @@ import (
 	"gorm.io/gorm"
 )
 
-func (s *Services) CreateCart(user *models.User) error {
-	if user.Cart.UserID == 0 {
-		user.Cart = models.Cart{UserID: user.ID}
-		if err := s.db.Save(&user).Error; err != nil {
-			return err
-		}
-	}
+type CartStorage interface {
+	CreateCart(cart *models.Cart) error
+	GetCart(user_id int) (*models.Cart, error)
+	GetCartItems(cart_id int) (*[]models.CartItem, error)
+	ClearCart(cartItems *[]models.CartItem) error
+	FindCartItem(cartId, productId int) (*models.CartItem, error)
+	UpdateCartItem(cartItemId int, updateCartItem *models.CartItem) error
+	CreateCartItem(cartItem *models.CartItem) error
+}
 
+func (s *Services) CreateCart(user *models.User) error {
+	if user.Cart.UserID != 0 {
+		return nil
+	}
+	cart := models.Cart{UserID: user.ID}
+	if err := s.storage.CreateCart(&cart); err != nil {
+		return err
+	}
 	return nil
 }
 
-func (s *Services) GetCart(user_id int) (models.Cart, error) {
-	var cart models.Cart
-	if err := s.db.Preload("Items").Where("user_id = ?", user_id).First(&cart).Error; err != nil {
-		return models.Cart{}, err
-	}
-
-	return cart, nil
+func (s *Services) GetCart(userId int) (*models.Cart, error) {
+	return s.storage.GetCart(userId)
 }
 
-func (s *Services) AddToCart(user_id, productID int) error {
-	var user models.User
-	if err := s.db.Preload("Cart").First(&user, user_id).Error; err != nil {
+func (s *Services) AddToCart(userId, productId int) error {
+	user, err := s.GetUserById(userId)
+	if err != nil {
 		return err
 	}
 
@@ -37,8 +42,8 @@ func (s *Services) AddToCart(user_id, productID int) error {
 		return gorm.ErrRecordNotFound
 	}
 
-	var product models.Product
-	if err := s.db.First(&product, productID).Error; err != nil {
+	product, err := s.GetProductById(userId)
+	if err != nil {
 		return err
 	}
 
@@ -46,26 +51,26 @@ func (s *Services) AddToCart(user_id, productID int) error {
 		return gorm.ErrRecordNotFound
 	}
 
-	var existingCartItem models.CartItem
-	if err := s.db.Where("cart_id = ? AND product_id = ?", cart.ID, productID).First(&existingCartItem).Error; err == nil {
-		existingCartItem.Quantity += 1
-		existingCartItem.Price = product.Price * float64(existingCartItem.Quantity)
-		if err := s.db.Save(&existingCartItem).Error; err != nil {
+	cartItem, err := s.storage.FindCartItem(int(cart.ID), productId)
+	if err == nil {
+		cartItem.Quantity += 1
+		cartItem.Price = product.Price * float64(cartItem.Quantity)
+		if err := s.storage.UpdateCartItem(int(cartItem.ID), cartItem); err != nil {
 			return err
 		}
 	} else {
 		newCartItem := models.CartItem{
 			CartID:    cart.ID,
-			ProductID: uint(productID),
+			ProductID: uint(productId),
 			Quantity:  1,
 			Price:     product.Price,
 		}
-		if err := s.db.Create(&newCartItem).Error; err != nil {
+		if err := s.storage.CreateCartItem(&newCartItem); err != nil {
 			return err
 		}
 	}
 	product.Stock -= 1
-	if err := s.db.Save(&product).Error; err != nil {
+	if err := s.UpdateProduct(productId, product); err != nil {
 		return err
 	}
 
@@ -73,19 +78,15 @@ func (s *Services) AddToCart(user_id, productID int) error {
 }
 
 func (s *Services) ClearCart(user_id int) error {
-	var cart models.Cart
-	if err := s.db.Where("user_id = ?", user_id).First(&cart).Error; err != nil {
+	cart, err := s.storage.GetCart(user_id)
+	if err != nil {
 		return err
 	}
 
-	var cartItems []models.CartItem
-	if err := s.db.Where("cart_id = ?", cart.ID).Find(&cartItems).Error; err != nil {
+	cartItems, err := s.storage.GetCartItems(int(cart.ID))
+	if err != nil {
 		return err
 	}
 
-	if err := s.db.Delete(&cartItems).Error; err != nil {
-		return err
-	}
-
-	return nil
+	return s.storage.ClearCart(cartItems)
 }

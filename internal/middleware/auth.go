@@ -23,7 +23,10 @@ func AuthMiddleware() gin.HandlerFunc {
 		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 		token, err := utils.ValidateJWT(tokenString)
 		if err != nil || !token.Valid {
-			c.AbortWithError(http.StatusUnauthorized, err)
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": "не валидный токен",
+			})
+			c.Abort()
 			return
 		}
 

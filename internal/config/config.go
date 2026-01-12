@@ -21,17 +21,17 @@ type Config struct {
 	AdminEmail    string
 }
 
-func LoadConfig() (Config, error) {
+func LoadConfig() (*Config, error) {
 	v := viper.New()
 
 	v.SetConfigName("config")
 	v.SetConfigType("yaml")
 
-	v.AddConfigPath(".")
 	v.AddConfigPath("./config")
+	v.AddConfigPath("../../config")
 
 	if err := v.ReadInConfig(); err != nil {
-		return Config{}, err
+		return &Config{}, err
 	}
 
 	config := Config{
@@ -49,9 +49,9 @@ func LoadConfig() (Config, error) {
 		AdminEmail:    v.GetString("admin.email"),
 	}
 
-	return config, nil
+	return &config, nil
 }
 
-func GetServerAddress(config Config) string {
+func GetServerAddress(config *Config) string {
 	return fmt.Sprintf("%s:%d", config.ServerHost, config.ServerPort)
 }

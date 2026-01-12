@@ -1,13 +1,15 @@
 package services
 
-import (
-	"gorm.io/gorm"
-)
-
-type Services struct {
-	db *gorm.DB
+type StorageInterface interface {
+	ProductStorage
+	UserStorage
+	CartStorage
 }
 
-func NewServices(db *gorm.DB) *Services {
-	return &Services{db: db}
+type Services struct {
+	storage StorageInterface
+}
+
+func NewServices(db StorageInterface) *Services {
+	return &Services{storage: db}
 }

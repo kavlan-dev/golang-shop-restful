@@ -4,44 +4,32 @@ import (
 	"golang-shop-restful/internal/models"
 )
 
-func (s *Services) GetProducts(limit, offset int) ([]models.Product, error) {
-	var products []models.Product
-	if err := s.db.Limit(limit).Offset(offset).Find(&products).Error; err != nil {
-		return nil, err
-	}
+type ProductStorage interface {
+	GetProducts(limit, offset int) (*[]models.Product, error)
+	CreateProduct(product *models.Product) error
+	FindProductById(id int) (*models.Product, error)
+	UpdateProduct(id int, updateProduct *models.Product) error
+	DeleteProduct(product *models.Product) error
+}
 
-	return products, nil
+func (s *Services) GetProducts(limit, offset int) (*[]models.Product, error) {
+	return s.storage.GetProducts(limit, offset)
 }
 
 func (s *Services) CreateProduct(product *models.Product) error {
-	if err := s.db.Create(product).Error; err != nil {
-		return err
-	}
-
-	return nil
+	return s.storage.CreateProduct(product)
 }
 
-func (s *Services) GetProductById(id int) (models.Product, error) {
-	var product models.Product
-
-	if err := s.db.First(&product, id).Error; err != nil {
-		return models.Product{}, err
-	}
-
-	return product, nil
+func (s *Services) GetProductById(id int) (*models.Product, error) {
+	return s.storage.FindProductById(id)
 }
 
 func (s *Services) UpdateProduct(id int, updateProduct *models.Product) error {
-	existingProduct, err := s.GetProductById(id)
+	_, err := s.GetProductById(id)
 	if err != nil {
 		return err
 	}
-
-	if err := s.db.Model(&existingProduct).Updates(updateProduct).Error; err != nil {
-		return err
-	}
-
-	return nil
+	return s.storage.UpdateProduct(id, updateProduct)
 }
 
 func (s *Services) DeleteProduct(id int) error {
@@ -50,9 +38,5 @@ func (s *Services) DeleteProduct(id int) error {
 		return err
 	}
 
-	if err := s.db.Delete(&product).Error; err != nil {
-		return err
-	}
-
-	return nil
+	return s.storage.DeleteProduct(product)
 }

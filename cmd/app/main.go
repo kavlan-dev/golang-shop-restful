@@ -2,11 +2,10 @@ package main
 
 import (
 	"golang-shop-restful/internal/config"
-	"golang-shop-restful/internal/database"
 	"golang-shop-restful/internal/handlers"
 	"golang-shop-restful/internal/middleware"
-	"golang-shop-restful/internal/models"
 	"golang-shop-restful/internal/services"
+	"golang-shop-restful/internal/storage/postgres"
 	"golang-shop-restful/internal/utils"
 	"log"
 
@@ -14,36 +13,34 @@ import (
 )
 
 func main() {
-	if err := utils.InitLogger(); err != nil {
-		log.Fatal(err)
+	logger, err := utils.InitLogger()
+	if err != nil {
+		log.Fatalf("Ошибка инициализации логгера: %v", err)
 	}
-	defer utils.Logger.Sync()
+	defer logger.Sync()
 
 	cfg, err := config.LoadConfig()
 	if err != nil {
-		utils.Logger.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	utils.InitJWT(cfg.JWTSecret)
 
-	db, err := database.ConnectDB(cfg)
+	db, err := postgres.ConnectDB(cfg)
 	if err != nil {
-		utils.Logger.Fatal(err)
-	}
-	if err := db.AutoMigrate(&models.Product{}, &models.User{}, &models.Cart{}, &models.CartItem{}); err != nil {
-		utils.Logger.Fatal(err)
+		logger.Fatal(err)
 	}
 
-	service := services.NewServices(db)
-	handler := handlers.NewHandler(service)
+	storage := postgres.NewStorage(db)
+	service := services.NewServices(storage)
+	handler := handlers.NewHandler(service, logger)
 
 	if err := service.CreateAdminIfNotExists(cfg.AdminName, cfg.AdminEmail, cfg.AdminPassword); err != nil {
-		utils.Logger.Errorf("Failed to create initial admin: %v", err)
+		logger.Errorf("Ошибка создания аккаунта администратора: %v", err)
 	}
 
 	r := gin.Default()
 	r.Use(middleware.CORSMiddleware(cfg.AllowOrigins))
-	r.Use(gin.ErrorLogger())
 
 	auth := r.Group("/api/auth")
 	auth.POST("/register", handler.Register)
@@ -72,5 +69,5 @@ func main() {
 	adminProduct.PUT("/:id", handler.PutProduct)
 	adminProduct.DELETE("/:id", handler.DeleteProduct)
 
-	utils.Logger.Fatal(r.Run(config.GetServerAddress(cfg)))
+	logger.Fatal(r.Run(config.GetServerAddress(cfg)))
 }

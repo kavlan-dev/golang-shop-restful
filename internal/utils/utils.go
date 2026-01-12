@@ -1,15 +1,29 @@
 package utils
 
-import "go.uber.org/zap"
+import (
+	"encoding/json"
 
-var Logger *zap.SugaredLogger
+	"go.uber.org/zap"
+)
 
-func InitLogger() error {
-	logger, err := zap.NewDevelopment()
-	if err != nil {
-		return err
+func InitLogger() (*zap.SugaredLogger, error) {
+	rawJSON := []byte(`{
+	  "level": "debug",
+	  "encoding": "json",
+	  "outputPaths": ["stdout", "info.log"],
+	  "errorOutputPaths": ["stderr"],
+	  "encoderConfig": {
+	    "messageKey": "message",
+	    "levelKey": "level",
+	    "levelEncoder": "lowercase"
+	  }
+	}`)
+
+	var cfg zap.Config
+	if err := json.Unmarshal(rawJSON, &cfg); err != nil {
+		return nil, err
 	}
+	logger := zap.Must(cfg.Build())
 
-	Logger = logger.Sugar()
-	return nil
+	return logger.Sugar(), nil
 }
