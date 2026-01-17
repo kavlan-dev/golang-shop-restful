@@ -1,7 +1,7 @@
 package services
 
 import (
-	"golang-shop-restful/internal/models"
+	"go-shop-restful/internal/models"
 
 	"gorm.io/gorm"
 )

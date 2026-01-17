@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"golang-shop-restful/internal/utils"
+	"go-shop-restful/internal/utils"
 	"net/http"
 	"strings"
 

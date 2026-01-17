@@ -1,6 +1,6 @@
 package postgres
 
-import "golang-shop-restful/internal/models"
+import "go-shop-restful/internal/models"
 
 func (s *Storage) GetProducts(limit, offset int) (*[]models.Product, error) {
 	var products []models.Product

@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"golang-shop-restful/internal/models"
+	"go-shop-restful/internal/models"
 	"net/http"
 	"strconv"
 

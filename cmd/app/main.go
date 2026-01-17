@@ -1,12 +1,12 @@
 package main
 
 import (
-	"golang-shop-restful/internal/app"
-	"golang-shop-restful/internal/config"
-	"golang-shop-restful/internal/handlers"
-	"golang-shop-restful/internal/services"
-	"golang-shop-restful/internal/storage/postgres"
-	"golang-shop-restful/internal/utils"
+	"go-shop-restful/internal/app"
+	"go-shop-restful/internal/config"
+	"go-shop-restful/internal/handlers"
+	"go-shop-restful/internal/services"
+	"go-shop-restful/internal/storage/postgres"
+	"go-shop-restful/internal/utils"
 	"log"
 )
 

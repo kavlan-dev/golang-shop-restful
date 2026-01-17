@@ -1,6 +1,6 @@
 package postgres
 
-import "golang-shop-restful/internal/models"
+import "go-shop-restful/internal/models"
 
 func (s *Storage) CreateCart(cart *models.Cart) error {
 	return s.db.Create(&cart).Error

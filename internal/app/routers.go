@@ -2,9 +2,9 @@ package app
 
 import (
 	"fmt"
-	"golang-shop-restful/internal/config"
-	"golang-shop-restful/internal/handlers"
-	"golang-shop-restful/internal/middleware"
+	"go-shop-restful/internal/config"
+	"go-shop-restful/internal/handlers"
+	"go-shop-restful/internal/middleware"
 
 	"github.com/gin-gonic/gin"
 )

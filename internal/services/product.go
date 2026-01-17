@@ -1,8 +1,6 @@
 package services
 
-import (
-	"golang-shop-restful/internal/models"
-)
+import "go-shop-restful/internal/models"
 
 type ProductStorage interface {
 	GetProducts(limit, offset int) (*[]models.Product, error)

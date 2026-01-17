@@ -1,6 +1,6 @@
 package postgres
 
-import "golang-shop-restful/internal/models"
+import "go-shop-restful/internal/models"
 
 func (s *Storage) CreateUser(user *models.User) error {
 	return s.db.Create(&user).Error

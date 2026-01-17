@@ -2,8 +2,8 @@ package postgres
 
 import (
 	"fmt"
-	"golang-shop-restful/internal/config"
-	"golang-shop-restful/internal/models"
+	"go-shop-restful/internal/config"
+	"go-shop-restful/internal/models"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
